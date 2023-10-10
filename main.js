@@ -6,67 +6,71 @@ const path = require("path");
  * File Name: main.js
  * Description:
  *
- * Created Date: 
- * Author:
+ * Created Date: 10/10/2023
+ * Author: Erfan Goudarzi, Navdeep Singh Brar 
  *
  */
-const fs = require("fs");
-const IOhandler = require("./IOhandler");
-const zipFilePath = path.join(__dirname, "myfile.zip");
-const pathUnzipped = path.join(__dirname, "unzipped");
-const pathProcessed = path.join(__dirname, "grayscaled");
+const unzipper = require('unzipper');
+const fs = require('fs');
+const PNG = require('pngjs').PNG;
+const path = require('path');
 
-const unzipper = require("unzipper");
-
-
-// Step 1 - Unzip myfile.zip
-
-fs.createReadStream('myfile.zip')  
-    .pipe( unzipper.Extract({ path: './unzipped' }));   
-
-// Step 2 - Read each png file in the unzipped folder
-
-
-
-
-
-var PNG = require("pngjs").PNG;
-
-fs.createReadStream("./unzipped/in.png")
-  .pipe(
-    new PNG({
-      filterType: 4,
-    })
-  )
-    .on("parsed", function () {
-    for (var y = 0; y < this.height; y++) {
-      for (var x = 0; x < this.width; x++) {
-        var idx = (this.width * y + x) << 2;
-
-        // invert color
-        this.data[idx] = 255 - this.data[idx];
-        this.data[idx + 1] = 255 - this.data[idx + 1];
-        this.data[idx + 2] = 255 - this.data[idx + 2];
-
-        // and reduce opacity
-        this.data[idx + 3] = this.data[idx + 3] >> 1;
-      }
-    }
-    
-
-    this.pack().pipe(fs.createWriteStream("out.png"));
+const unzip = (pathIn, pathOut) => {
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(pathIn)
+      .pipe(unzipper.Extract({ path: pathOut }))
+      .on('close', () => {
+        console.log('Extraction operation complete');
+        resolve();
+      })
+      .on('error', (err) => {
+        reject(err);
+      });
   });
+};
 
-  // step 1: read the zip file 
-    // step 2: unzip the file
-    // step 3: read all png images frpm unzipped folder 
-    // step 4: Send them to the grayscale filter function
-    // step 5: after all images has successfully processed, show a success message 
-    // all errors should be show in .catch in promise chain
+const readDir = (dir) => {
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        const pngFiles = files
+          .filter((file) => file.endsWith('.png'))
+          .map((file) => path.join(dir, file));
+        resolve(pngFiles);
+      }
+    });
+  });
+};
 
-[grayScale('./unzipped/in.png'), grayScale('./unzipped/in2.png'), grayScale('./unzipped/in3.png')]
-    .then(() => console.log('All images processed successfully'))
-    .catch(err => console.log(err.message));
+const grayScale = (pathIn, pathOut) => {
+  return new Promise((resolve, reject) => {
+    const reader = fs.createReadStream(pathIn).pipe(new PNG());
 
+    reader
+      .on('error', (err) => reject(err))
+      .on('parsed', function () {
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            const idx = (this.width * y + x) << 2;
+            const avg = (this.data[idx] + this.data[idx + 1] + this.data[idx + 2]) / 3;
+            this.data[idx] = this.data[idx + 1] = this.data[idx + 2] = avg;
+          }
+        }
 
-//My first change to code to make sure I a connected to github 
+        const writer = fs.createWriteStream(pathOut).pipe(new PNG());
+        writer.write(this.data, () => {
+          writer.end();
+          console.log(`Grayscale operation complete for ${pathIn}`);
+          resolve();
+        });
+      });
+  });
+};
+
+module.exports = {
+  unzip,
+  readDir,
+  grayScale,
+};
