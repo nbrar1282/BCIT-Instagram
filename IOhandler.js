@@ -9,10 +9,9 @@
  */
 
 const AdmZip = require("adm-zip");
-// const path = require("path");
-//   fs = require("fs"),
-//   PNG = require("pngjs").PNG,
-//   path = require("path");
+const path = require("path");
+  fs = require("fs"),
+  PNG = require("pngjs").PNG;
 
 /**
  * Description: decompress file from given pathIn, write to given pathOut
@@ -24,6 +23,7 @@ const AdmZip = require("adm-zip");
 const unzip = (pathIn, pathOut) => {
   const zip = new AdmZip(pathIn);
   zip.extractAllTo(pathOut, true);
+  console.log("unzipped successfully");
 };
 
 /**
@@ -33,31 +33,71 @@ const unzip = (pathIn, pathOut) => {
  * @return {promise}
  */
 const readDir = (dir) => {
+  // asynx function
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        reject(err);
+      } else {
+        const pngFiles = files.filter((file) => path.extname(file) === ".png");
+        resolve(pngFiles);
+      }
+    });
+  });
+
   
 
 };
 
-/**
- * Description: Read in png file by given pathIn,
- * convert to grayscale and write to given pathOut
- *
- * @param {string} filePath
- * @param {string} pathProcessed
- * @return {promise}
- */
-const grayScale = (pathIn, pathOut) => {
-  var fs =  require('fs');
-  PNG = require("pngjs").PNG;
+const handleGrayScale = (imageData) => {
+  for (var y = 0; y < imageData.height; y++) {
+    for (var x = 0; x < imageData.width; x++) {
+      var idx = (imageData.width * y + x) << 2;
 
-  const readStream = fs.createReadStream("unzipped/in1.png");
-  const writeStream = fs.createWriteStream("out.png");
-  const png = new PNG().on("parsed", function () {
-    const modifiedImage = handleGrayScale();
-    modifiedImage.pack();
-  });
+      // invert color
+      imageData.data[idx] = 255 - imageData.data[idx]; // red
+      imageData.data[idx + 1] = 255 - imageData.data[idx + 1]; // green
+      imageData.data[idx + 2] = 255 - imageData.data[idx + 2]; // blue
+
+      // and reduce opacity
+      imageData.data[idx + 3] = imageData.data[idx + 3] >> 1; // alpha
+    }
+  }
 };
 
-unzip("./myfile.zip", "./unzipped");
+/**
+ * Description: Read in png file by given pathIn,
+ * convert to grayscale, and write to given pathOut
+ *
+ * @param {string} pathIn
+ * @param {string} pathOut
+ */
+const grayScale = (pathIn, pathOut) => {
+  const fs = require('fs');
+  const PNG = require("pngjs").PNG;
+
+  const readStream = fs.createReadStream(pathIn);
+  const writeStream = fs.createWriteStream(pathOut);
+
+  readStream
+    .pipe(new PNG())
+    .on("parsed", function () {
+      handleGrayScale(this); 
+      this.pack().pipe(writeStream);
+    });
+};
+
+grayScale("unzipped/in1.png", "grayscaled/out1.png");
+
+
+// unzip("./myfile.zip", "./unzipped");
+// readDir('unzipped')
+//   .then((pngFiles) => {
+//     console.log('List of PNG files:', pngFiles);
+//   })
+//   .catch((err) => {
+//     console.error('An error occurred:', err);
+//   });
 
 
 module.exports = {

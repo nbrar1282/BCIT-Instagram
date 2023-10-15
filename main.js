@@ -44,29 +44,29 @@ zip.extractAllTo("./extracted", true);
 
 // const PNG = require("node_modules/pngjs").PNG;
 
-// fs.createReadStream("unzipped/in1.png")
-//   .pipe(
-//     new PNG({
-//       filterType: 4,
-//     })
-//   )
-//   .on("parsed", function () {
-//     for (var y = 0; y < this.height; y++) {
-//       for (var x = 0; x < this.width; x++) {
-//         var idx = (this.width * y + x) << 2;
+fs.createReadStream("unzipped/in1.png")
+  .pipe(
+    new PNG({
+      filterType: 4,
+    })
+  )
+  .on("parsed", function () {
+    for (var y = 0; y < this.height; y++) {
+      for (var x = 0; x < this.width; x++) {
+        var idx = (this.width * y + x) << 2;
 
-//         // invert color
-//         this.data[idx] = 255 - this.data[idx]; // red
-//         this.data[idx + 1] = 255 - this.data[idx + 1]; // green             WE NEED TO FOCUS ON THIS PART MOST FOR THIS LAB 
-//         this.data[idx + 2] = 255 - this.data[idx + 2]; // blue
+        // invert color
+        this.data[idx] = 255 - this.data[idx]; // red
+        this.data[idx + 1] = 255 - this.data[idx + 1]; // green             WE NEED TO FOCUS ON THIS PART MOST FOR THIS LAB 
+        this.data[idx + 2] = 255 - this.data[idx + 2]; // blue
 
-//         // and reduce opacity
-//         this.data[idx + 3] = this.data[idx + 3] >> 1; // alpha
-//       }
-//     }
+        // and reduce opacity
+        this.data[idx + 3] = this.data[idx + 3] >> 1; // alpha
+      }
+    }
 
-//     this.pack().pipe(fs.createWriteStream("out.png"));
-//   });
+    this.pack().pipe(fs.createWriteStream("out.png"));
+  });
 
 //step 3 read all png images from unzipped folder
 //step 4 send them to grsyscle folder function
