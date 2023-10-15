@@ -10,8 +10,9 @@
 
 const AdmZip = require("adm-zip");
 const path = require("path");
-  fs = require("fs"),
-  PNG = require("pngjs").PNG;
+const fs = require("fs").promises;
+const { createReadStream, createWriteStream } = require("fs");
+const PNG = require("pngjs").PNG;
 
 /**
  * Description: decompress file from given pathIn, write to given pathOut
@@ -54,10 +55,13 @@ const handleGrayScale = (imageData) => {
     for (var x = 0; x < imageData.width; x++) {
       var idx = (imageData.width * y + x) << 2;
 
-      // invert color
-      imageData.data[idx] = 255 - imageData.data[idx]; // red
-      imageData.data[idx + 1] = 255 - imageData.data[idx + 1]; // green
-      imageData.data[idx + 2] = 255 - imageData.data[idx + 2]; // blue
+      // grayscaling color by averaging RGB values
+      const avg = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+      imageData.data[idx] = avg; // red
+      imageData.data[idx + 1] = avg; // green
+      imageData.data[idx + 2] = avg; // blue
+
+
 
       // and reduce opacity
       imageData.data[idx + 3] = imageData.data[idx + 3] >> 1; // alpha
@@ -73,11 +77,10 @@ const handleGrayScale = (imageData) => {
  * @param {string} pathOut
  */
 const grayScale = (pathIn, pathOut) => {
-  const fs = require('fs');
-  const PNG = require("pngjs").PNG;
 
-  const readStream = fs.createReadStream(pathIn);
-  const writeStream = fs.createWriteStream(pathOut);
+
+  const readStream = createReadStream(pathIn);
+  const writeStream = createWriteStream(pathOut);
 
   readStream
     .pipe(new PNG())
@@ -87,7 +90,7 @@ const grayScale = (pathIn, pathOut) => {
     });
 };
 
-grayScale("unzipped/in1.png", "grayscaled/out1.png");
+// grayScale("unzipped/in2.png", "grayscaled/out1.png");
 
 
 // unzip("./myfile.zip", "./unzipped");
