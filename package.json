@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "unzip.js",
   "dependencies": {
+    "adm-zip": "^0.5.10",
     "pngjs": "^6.0.0",
     "unzipper": "^0.10.11"
   },
