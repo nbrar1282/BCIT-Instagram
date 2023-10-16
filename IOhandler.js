@@ -3,8 +3,8 @@
  * File Name: IOhandler.js
  * Description: Collection of functions for files input/output related operations
  *
- * Created Date:
- * Author:
+ * Created Date: 15 Oct 2023
+ * Author: Navdeep, Erfan
  *
  */
 
@@ -22,10 +22,13 @@ const PNG = require("pngjs").PNG;
  * @return {promise}
  */
 const unzip = (pathIn, pathOut) => {
-  const zip = new AdmZip(pathIn);
-  zip.extractAllTo(pathOut, true);
-  console.log("unzipped successfully");
-};
+  
+    const zip = new AdmZip(pathIn);
+    zip.extractAllTo(pathOut, true);
+    return Promise.resolve(); //another way of returning a promise at the end of a function
+    
+  };
+
 
 /**
  * Description: read all the png files from given directory and return Promise containing array of each png file path
@@ -33,22 +36,24 @@ const unzip = (pathIn, pathOut) => {
  * @param {string} path
  * @return {promise}
  */
+
 const readDir = (dir) => {
-  // asynx function
-  return new Promise((resolve, reject) => {
-    fs.readdir(dir, (err, files) => {
-      if (err) {
-        reject(err);
-      } else {
+    return fs.readdir(dir)
+      .then((files) => {
         const pngFiles = files.filter((file) => path.extname(file) === ".png");
-        resolve(pngFiles);
-      }
-    });
-  });
+        return pngFiles;
+      })
+      .catch((err) => {
+        console.error("An error occurred:", err);
+        throw err; // Re-throw the error for downstream handling
+      });
+      
+
+  };
+  
 
   
 
-};
 
 const handleGrayScale = (imageData) => {
   for (var y = 0; y < imageData.height; y++) {
@@ -90,17 +95,22 @@ const grayScale = (pathIn, pathOut) => {
     });
 };
 
-// grayScale("unzipped/in2.png", "grayscaled/out1.png");
+
 
 
 // unzip("./myfile.zip", "./unzipped");
 // readDir('unzipped')
-//   .then((pngFiles) => {
-//     console.log('List of PNG files:', pngFiles);
+// .then((files) => {
+//   console.log(files);
 //   })
-//   .catch((err) => {
-//     console.error('An error occurred:', err);
-//   });
+// .catch((err) => {
+//   console.error("An error occurred:", err);
+//   throw err; // Re-throw the error for downstream handling
+// });
+    
+
+ 
+grayScale("unzipped/in2.png", "grayscaled/out1.png");
 
 
 module.exports = {
