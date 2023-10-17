@@ -92,10 +92,22 @@ const grayScale = (pathIn, pathOut) => {
     .on("parsed", function () {
       handleGrayScale(this); 
       this.pack().pipe(writeStream);
+    })
+    .on("error", (err) => {
+      console.error("An error occurred:", err);
+      throw err; // Re-throw the error for downstream handling
     });
+
 };
 
 
+
+
+module.exports = {
+  unzip,
+  readDir,
+  grayScale,
+};
 
 
 // unzip("./myfile.zip", "./unzipped");
@@ -110,11 +122,4 @@ const grayScale = (pathIn, pathOut) => {
     
 
  
-grayScale("unzipped/in2.png", "grayscaled/out1.png");
-
-
-module.exports = {
-  unzip,
-  readDir,
-  grayScale,
-};
+// grayScale("unzipped/in2.png", "grayscaled/out1.png");
