@@ -69,7 +69,7 @@ const handleGrayScale = (imageData) => {
 
 
       // and reduce opacity
-      imageData.data[idx + 3] = imageData.data[idx + 3] >> 1; // alpha
+      // imageData.data[idx + 3] = imageData.data[idx + 3] >> 1; // alpha
     }
   }
 };
